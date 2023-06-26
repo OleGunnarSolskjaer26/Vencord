@@ -1,0 +1,102 @@
+{
+    "extends": "stylelint-config-standard",
+    "rules": {
+        "indentation": 4
+        "indentation": 4,
+        "property-no-vendor-prefix": null
+    }
+}
+:is([class*="userProfile"], [class*="userPopout"]) [class*="bannerPremium"] {
+:is([class^="userProfile"], [class^="userPopout"]) [class*="bannerPremium"] {
+    background: center / cover no-repeat;
+}
+
+@@ -7,6 +7,25 @@
+    top: 76px;
+}
+
+[style*="background-image"] [class*="background-"] {
+[style^="background-image"] [class^="background-"] {
+    background-color: transparent !important;
+}
+
+[style^="--mlbg"]::before {
+    opacity: 0.8;
+    -webkit-mask-image: linear-gradient(to right, transparent 20%, #fff);
+    mask-image: linear-gradient(to right, transparent 20%, #fff);
+    width: 100%;
+    height: 100%;
+    content: "";
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    border-radius: 4px;
+    background-image: var(--mlbg);
+}
+
+[class^="memberInner-"] {
+    z-index: 1;
+    position: relative;
+}
+        type: OptionType.BOOLEAN,
+        default: true,
+        restartNeeded: true
+    },
+    memberListBackground: {
+        description: "Show USRBG banners in the members list",
+        type: OptionType.BOOLEAN,
+        default: true,
+        restartNeeded: true
+    }
+});
+
+@@ -77,6 +83,16 @@ export default definePlugin({
+                    replace: "$self.voiceBackgroundHook($1),"
+                }
+            ]
+        },
+        {
+            find: "[\"aria-selected\"])",
+            predicate: () => settings.store.memberListBackground,
+            replacement: [
+                {
+                    match: /(forwardRef\(\(function\((\i)(.+?"listitem",))(innerRef)/,
+                    replace: "$1style:$self.memberListBannerHook($2),$4"
+                }
+            ]
+        }
+    ],
+
+@@ -86,17 +102,22 @@ export default definePlugin({
+        );
+    },
+
+    memberListBannerHook(props: any) {
+        const userId = props.avatar._owner.pendingProps.user.id;
+        if (!data[userId]) return;
+        return {
+            "--mlbg": `url("${data[userId]}")`
+        };
+    },
+
+    voiceBackgroundHook({ className, participantUserId }: any) {
+        if (className.includes("tile-")) {
+            if (data[participantUserId]) {
+                return {
+                    backgroundImage: `url(${data[participantUserId]})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat"
+                };
+            }
+        }
+        if (!data[participantUserId] || !className.includes("tile-")) return;
+        return {
+            backgroundImage: `url(${data[participantUserId]})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat"
+        };
+    },
+
+    useBannerHook({ displayProfile, user }: any) {
